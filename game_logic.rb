@@ -49,8 +49,7 @@ class GameLogic
     end
 
     def ai_choice
-      'rock'
-      # CHOICE.sample
+      CHOICE.sample
     end
   end
 end
