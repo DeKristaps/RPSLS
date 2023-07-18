@@ -38,7 +38,7 @@ class GameLogic
     end
 
     def evaluate_game(players)
-      players.min { |a, b| b.points <=> a.points }.name
+      players.sort { |a, b| b.points <=> a.points }
     end
 
     def player_choice
@@ -49,7 +49,8 @@ class GameLogic
     end
 
     def ai_choice
-      CHOICE.sample
+      'rock'
+      # CHOICE.sample
     end
   end
 end

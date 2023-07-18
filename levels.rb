@@ -6,15 +6,15 @@ require './game_logic'
 class Levels
   class << self
     PLAYER_NAMES = [
-      "Glass Joe",
+      'Glass Joe',
       "Dwayne 'The Rock' Johnson",
-      "Edward Scissorhands",
-      "Clippy",
-      "Ben Grimm",
-      "Scissorman",
-      "Spock",
-      "GodZilla",
-      "Gorn",
+      'Edward Scissorhands',
+      'Clippy',
+      'Ben Grimm',
+      'Scissorman',
+      'Spock',
+      'GodZilla',
+      'Gorn'
     ].freeze
 
     VALID_CHOICES = %w[
@@ -42,93 +42,97 @@ class Levels
     end
 
     def level_one
-      player = Player.new('Player')
-      oponent = Player.new('')
-
-      3.times do
-        player.choice = GameLogic.player_choice
-        oponent.choice = GameLogic.ai_choice
-
-        GameLogic.evaluate([player, oponent])
-      end
-
-      winer = GameLogic.evaluate_game([player, oponent])
-
-      puts '###############################################'
-      puts
-      puts "               #{winer} wins!                  "
-      puts
-      puts '###############################################'
+      players = define_players(1)
+      rounds(3, players)
+      winner = GameLogic.evaluate_game(players)
+      print_winner(winner)
     end
 
     def level_two
-      player = Player.new('Player')
-      oponent1 = Player.new('Dwayne The Rock Johnson')
-      oponent2 = Player.new('Edward Scissorhands')
-      oponent3 = Player.new('Clippy')
-      winer = ''
-
-      oponents = [oponent1, oponent2, oponent3]
+      players = define_players(3)
+      player = players.shift
+      oponents = players
 
       oponents.each do |oponent|
-        winer = ''
         puts "Your oponent is #{oponent.name}"
-        3.times do
-          player.choice = GameLogic.player_choice
-          oponent.choice = GameLogic.ai_choice
+        players = [player, oponent]
+        rounds(3, players)
 
-          GameLogic.evaluate([player, oponent])
-        end
+        winner = GameLogic.evaluate_game(players)
+        print_winner(winner)
 
-        winer = GameLogic.evaluate_game([player, oponent])
+        break if winner.first.name != player.name
 
-        puts '###############################################'
-        puts '|                                             |'
-        if winer == player.name
-          puts '|              You won this round             |'
-        else
-          puts '|             You lost!                       |'
-        end
-        puts '|                                             |'
-        puts '###############################################'
-
-        break if winer != player.name
-
+        oponent.points = 0
         player.points = 0
       end
     end
 
     def level_three
-      puts "Chose the player count(1 - 9):"
+      puts 'Chose the player count(1 - 9):'
       player_cout = gets.chomp.to_i
-      puts "Pass the number of rounds(1 - 5):"
+      puts 'Pass the number of rounds(1 - 5):'
       round_count = gets.chomp.to_i
-      players = [Player.new("Player")]
+      players = define_players(player_cout)
 
-      player_cout.times do |iter|
-        players << Player.new(PLAYER_NAMES[iter])
-      end
-
-      players.each do | player|
-        players.each do | oponent |
+      players.each do |player|
+        players.each do |oponent|
           next if oponent.name == player.name
           next if oponent.oponents_played.include?(player.name)
-          puts "Your oponent is #{oponent.name}"
-          round_count.times do
-            player.choice = player.name == "Player" ? GameLogic.player_choice : GameLogic.ai_choice
-            oponent.choice = oponent.name == "Player" ? GameLogic.player_choice : GameLogic.ai_choice
 
-            GameLogic.evaluate([player, oponent])
-          end
+          puts "Your oponent is #{oponent.name}"
+          round_players = [player, oponent]
+          rounds(round_count, round_players)
           player.oponents_played << oponent.name
           oponent.oponents_played << player.name
         end
       end
-      puts "###############################################"
-      players.each do | player |
+
+      players_sorted = GameLogic.evaluate_game(players)
+
+      puts '###############################################'
+      players_sorted.each do |player|
         puts "#{player.name} got :#{player.points} points"
       end
-      puts "###############################################"
+      print_winner(players_sorted)
+    end
+
+    private
+
+    def rounds(number_of_rounds, players)
+      number_of_rounds.times do
+        players.first.choice = players.first.name == 'Player' ? GameLogic.player_choice : GameLogic.ai_choice
+        players.last.choice = players.last.name == 'Player' ? GameLogic.player_choice : GameLogic.ai_choice
+
+        GameLogic.evaluate(players)
+      end
+    end
+
+    def print_winner(players)
+      first_place = players.first
+      winners = players.select { |player| player.points == first_place.points }
+
+      puts '###############################################'
+      puts
+      if winners.length > 1
+        puts "its a tie between #{winners.map(&:name).join(' and ')}"
+      elsif first_place.name == 'Player'
+        puts 'You win!'
+      else
+        puts 'You lose!'
+      end
+      puts
+      puts '###############################################'
+    end
+
+    def define_players(count)
+      players = [
+        Player.new('Player')
+      ]
+      count.times do |iter|
+        players << Player.new(PLAYER_NAMES[iter])
+      end
+      players
     end
   end
 end
